@@ -22,6 +22,7 @@ struct matrix {
 			}
 		}
 	}
+	
 	matrix(double** _M, unsigned _n, unsigned _m) : M(_M), n(_n), m(_m) {}
 
 	// temp
