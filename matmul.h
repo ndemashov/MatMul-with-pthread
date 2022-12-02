@@ -7,12 +7,18 @@
 
 #include<iostream>
 
+enum CalcType{
+	ByColumns,
+	ByRows,
+	ByBlocks
+};
+
 struct matrix {
 	unsigned n, m;
 	double **M;
 	matrix(const unsigned _n, const unsigned _m) : n(_n), m(_m) {
 		M = (double**)malloc(n * sizeof(double*));
-		unsigned step = 1;
+		int step = (int)(n * m) / -2;
 		for (unsigned i = 0; i < n; ++i) {
 			M[i] = (double*)malloc(m * sizeof(double));
 			for (unsigned j = 0; j < m; ++j) {
@@ -40,5 +46,5 @@ public:
 	static void* mul_by_columns(void* args);
 	static void* mul_by_rows(void* args);
 	static void* mul_by_blocks(void* args);
-	static matrix calc(matrix& m1, matrix& m2);
+	static matrix calc(const CalcType ct, matrix& m1, matrix& m2);
 };
