@@ -22,6 +22,7 @@ struct matrix {
 	matrix(const unsigned _n, const unsigned _m);
 	matrix(double** _M, unsigned _n, unsigned _m);
 	matrix(const matrix& mtrx, const unsigned ind, const MatrixParam mp);
+	matrix(const matrix& mtrx, const unsigned row_ind, const unsigned col_ind, const unsigned amount_row, const unsigned amount_col);
 	~matrix();
 	//matrix(const matrix&) = delete;
 	matrix& operator=(const matrix& mtrx);
@@ -41,8 +42,13 @@ class MatMul {
 public:
 	static void* mul_by_columns(void* args);
 	static void* mul_by_rows(void* args);
-	static void* mul_by_blocks(void* args);
+	static void* mul_by_blocks(void* args); 
 	static void calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix& result);
+};
+
+class Decomposition {
+public:
+	static unsigned amount_threads(const matrix& mtrx, unsigned& row_block, unsigned& col_block);  
 };
 
 class Metric{

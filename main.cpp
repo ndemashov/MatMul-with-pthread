@@ -15,15 +15,19 @@ int test(const CalcType ct){
 }
 
 int main() {
+	// Определение количества процесcоров
+	//const auto processor_count = std::thread::hardware_concurrency();
+    //std::cout << processor_count << std::endl;
+
 	matrix m1(5, 2), m2(2, 1);
-	//std::cout << "M1" << std::endl;
-	//m1.print();
-	//std::cout << "M2" << std::endl;
-	//m2.print();
+	std::cout << "M1" << std::endl;
+	m1.print();
+	std::cout << "M2" << std::endl;
+	m2.print();
 	matrix result(5, 1);
 	MatMul::calc(CalcType::ByRows, m1, m2, result);
-	//std::cout << "Result" << std::endl;
-	//result.print();
+	std::cout << "Result" << std::endl;
+	result.print();
 	if(test(CalcType::ByRows) == 1){
 		std::cout << "ERROR" << std::endl;
 	}else{
