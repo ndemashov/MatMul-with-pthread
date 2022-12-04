@@ -17,20 +17,26 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 	assert(m1.m == m2.n);
 	assert(m1.n == result.n && m2.m == result.m);
 	if(ct == CalcType::ByRows){
-		unsigned thread_count = m1.n;
+		unsigned thread_count = m1.n * m2.m;
 		pthread_t* thread_handles = (pthread_t*)malloc(thread_count * sizeof(pthread_t));
 		matrix** submatrices = (matrix**)malloc(thread_count * sizeof(matrix*));
-		for (unsigned thread = 0; thread < thread_count; ++thread) {
-			submatrices[thread] = (matrix*)malloc(3 * sizeof(matrix));
-			submatrices[thread][0] = matrix(m1, thread, MatrixParam::row);
-			submatrices[thread][1] = m2;
-			submatrices[thread][2] = matrix(result, thread, MatrixParam::row);
-			pthread_create(&thread_handles[thread], NULL, MatMul::mul_by_rows, (void*)submatrices[thread]);
+		for (unsigned row = 0; row < m1.n; ++row) {
+			for(unsigned column = 0; column < m2.m; ++column){
+				unsigned thread = row * m2.m + column;
+				submatrices[thread] = (matrix*)malloc(3 * sizeof(matrix));
+				submatrices[thread][0] = matrix(m1, row, 0, MatrixParam::row);
+				submatrices[thread][1] = matrix(m2, 0, column, MatrixParam::column);
+				submatrices[thread][2] = matrix(result, row, column, MatrixParam::cell);
+				pthread_create(&thread_handles[thread], NULL, MatMul::mul_by_rows, (void*)submatrices[thread]);
+			}
 		}
-		for (unsigned thread = 0; thread < thread_count; ++thread) {
-			pthread_join(thread_handles[thread], NULL);
-			result.M[thread][0] = submatrices[thread][2].M[0][0];
-			delete submatrices[thread];
+		for (unsigned row = 0; row < m1.n; ++row) {
+			for(unsigned column = 0; column < m2.m; ++column) {
+				unsigned thread = row * m2.m + column;
+				pthread_join(thread_handles[thread], NULL);
+				result.M[row][column] = submatrices[thread][2].M[0][0];
+				delete submatrices[thread];
+			}
 		}
 		delete submatrices;
 		delete thread_handles;
@@ -50,23 +56,29 @@ matrix::matrix(const unsigned _n, const unsigned _m) : n(_n), m(_m) {
 	}
 }
 
-matrix::matrix(const matrix& mtrx, const unsigned ind, const MatrixParam mp) {
+matrix::matrix(const matrix& mtrx, const unsigned row, const unsigned column, const MatrixParam mp) {
 	if(mp == MatrixParam::row){
 		n = 1;
 		m = mtrx.m;
 		M = (double**)malloc(n * sizeof(double*));
 		M[0] = (double*)malloc(m * sizeof(double));
 		for(unsigned i = 0; i < m; ++i){
-			M[0][i] = mtrx.M[ind][i];
+			M[0][i] = mtrx.M[row][i];
 		}
-	}else{
+	}else if(mp == MatrixParam::column){
 		n = mtrx.n;
 		m = 1;
 		M = (double**)malloc(n * sizeof(double*));
-		for(unsigned i = 0; i < m; ++i){
+		for(unsigned i = 0; i < n; ++i){
 			M[i] = (double*)malloc(m * sizeof(double));
-			M[i][0] = mtrx.M[ind][i];
+			M[i][0] = mtrx.M[i][column];
 		}
+	}else if(mp == MatrixParam::cell){
+		n = 1;
+		m = 1;
+		M = (double**)malloc(n * sizeof(double*));
+		M[0] = (double*)malloc(m * sizeof(double));
+		M[0][0] = mtrx.M[row][column];
 	}
 }
 
