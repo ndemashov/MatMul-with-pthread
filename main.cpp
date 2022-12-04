@@ -25,6 +25,8 @@ int main() {
 	std::cout << "M2" << std::endl;
 	m2.print();
 	matrix result(5, 1);
+	std::cout << "result" << std::endl;
+	result.print();
 	MatMul::calc(CalcType::ByRows, m1, m2, result);
 	std::cout << "Result" << std::endl;
 	result.print();

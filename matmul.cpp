@@ -16,7 +16,15 @@ void* MatMul::mul_by_rows(void* _matrices) {
 }
 
 void* MatMul::mul_by_blocks(void* _matrices) {
-
+	matrix* matrices = (matrix*)_matrices;
+	for(unsigned i = 0; i < matrices[0].n; ++i) {
+		for (unsigned j = 0; j < matrices[1].m; ++j) {
+			for (unsigned k = 0; k < matrices[0].m; ++k) {
+				matrices[2].M[i][j] += matrices[0].M[i][k] * matrices[1].M[k][j];;
+			}
+		}
+	}
+	return NULL;
 }
 
 void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix& result) {
@@ -43,30 +51,113 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 	}
 
 	if(ct == CalcType::ByBlocks) {
-		unsigned row_block = 1;
-		unsigned col_block = 1;
-		unsigned thread_count = Decomposition::amount_threads(m1, row_block, col_block);
+		unsigned row_block_m1 = 1;
+		unsigned col_block_m1 = 1;
+		unsigned row_block_m2 = 1;
+		unsigned col_block_m2 = 1;
+		// Сюда лучше передавать матрицу с наибольшей размерностью, но пока это m1
+		unsigned thread_count_m1 = Decomposition::amount_threads(m1, row_block_m1, col_block_m1);
+		unsigned thread_count_m2 = Decomposition::amount_threads(m1, row_block_m2, col_block_m2);
+		unsigned thread_count = std::max(thread_count_m1, thread_count_m2);
 		// row_block * row_ind = thread_count
 		pthread_t* thread_handles = (pthread_t*)malloc(thread_count * sizeof(pthread_t));
 		matrix** submatrices = (matrix**)malloc(thread_count * sizeof(matrix*));
 		unsigned thread = 0;
-		unsigned amount_row_by_block;
-		unsigned amount_col_by_block;
+		unsigned amount_elements_by_row_m1 = ceil(m1.n / row_block_m1);
+		unsigned amount_elements_by_col_m1 = ceil(m1.m / col_block_m1);
+		unsigned amount_elements_by_row_m2 = ceil(m2.n / row_block_m2);
+		unsigned amount_elements_by_col_m2 = ceil(m2.m / col_block_m2);
 
-		for (unsigned row_ind = 0; row_ind < row_block; ++row_ind) {
-			amount_row_by_block = floor(m1.n / row_block) ? row_ind == row_block - 1 : ceil(m1.n / row_block);
-			for (unsigned col_ind = 0; col_ind < col_block; ++col_ind) {
-				amount_col_by_block = floor(m1.m / col_block) ? col_ind == col_block - 1 : ceil(m1.m / col_block);
+		for (unsigned row_ind_m1 = 0, row_ind_m2 = 0, i = 0; i < std::max(row_block_m1, row_block_m2) ; ++i) {
+			for (unsigned col_ind_m1 = 0, col_ind_m2 = 0, j = 0; j < std::max(col_block_m1, col_block_m2); ++j) {
+				if (col_ind_m1 == col_block_m1) {
+					row_ind_m1++;
+					col_ind_m1 = 0;
+				}
+				if (col_ind_m2 == col_block_m2) {
+					row_ind_m2++;
+					col_ind_m2 = 0;
+				}
 				submatrices[thread] = (matrix*)malloc(3 * sizeof(matrix));
-				submatrices[thread][0] = matrix(m1, row_ind, col_ind, amount_row_by_block, amount_col_by_block);
-				submatrices[thread][1] = m2; // Переписать
-				submatrices[thread][2] = matrix(result, thread, MatrixParam::row); // Переписать
-				pthread_create(&thread_handles[thread], NULL, MatMul::mul_by_rows, (void*)submatrices[thread]);
-				++thread;
-				
+				submatrices[thread][0] = matrix(m1, row_ind_m1, col_ind_m1, amount_elements_by_row_m1, amount_elements_by_col_m1);
+				submatrices[thread][1] = matrix(m2, row_ind_m2, col_ind_m2, amount_elements_by_row_m2, amount_elements_by_col_m2);
+				submatrices[thread][2] = matrix(result, row_ind_m1, col_ind_m2, amount_elements_by_row_m1, amount_elements_by_col_m2);
+				pthread_create(&thread_handles[thread], NULL, MatMul::mul_by_blocks, (void*)submatrices[thread]);
+				thread++;
+				col_ind_m1++;
+				col_ind_m2++;
+			}
+			row_ind_m1++;
+			row_ind_m2++;
+			if (row_ind_m1 >= row_block_m1) {
+				row_ind_m1 = 0;
+			} 
+			if (row_ind_m2 >= row_block_m2) {
+				row_ind_m2 = 0;
 			}
 		}
-		
+
+		for (unsigned thread = 0; thread < thread_count; ++thread) {
+			pthread_join(thread_handles[thread], NULL);
+		}
+		thread = 0;
+		unsigned v = 0;
+		unsigned u = 0;
+		for (unsigned i = 0; i < std::max(row_block_m1, row_block_m2); ++i) {
+			for (unsigned j = 0; j < std::max(col_block_m1, col_block_m2); ++j, ++thread) {
+				for (unsigned k = 0; k < submatrices[thread][2].n; ++k) {
+					for (unsigned t = 0; t < submatrices[thread][2].m; ++t) {
+						result.M[v][u] += submatrices[thread][2].M[v][u];
+					}
+				}
+			}
+		}
+
+
+
+		for (unsigned thread = 0; thread < thread_count; ++thread) {
+			pthread_join(thread_handles[thread], NULL);
+		}
+		unsigned v = 0;
+		unsigned u = 0;
+		thread = 0;
+		for (unsigned i = 0; i < std::max(row_block_m1, row_block_m2) ; ++i) {
+			for (unsigned j = 0; j < std::max(col_block_m1, col_block_m2); ++j) {
+				for (unsigned thread = 0; thread < thread_count/2; ++thread) {
+					result.M[v][u] += submatrices[thread][2].M[i][j];
+				}
+			}
+		}
+
+		for (unsigned i = 0; i < m1.n; ++i) {
+			for (unsigned j = 0; j < m2.m; ++j) {
+				result.M[i][j] = 0;
+			}
+		}
+
+		unsigned v = 0;
+		unsigned u = 0;
+		for (unsigned thread = 0; thread < thread_count; ++thread) {
+			for (unsigned i = 0; i < submatrices[thread][2].n; ++i) {
+				for (unsigned j = 0; j < submatrices[thread][2].m; ++j) {
+					result.M[v][u] += submatrices[thread][2].M[i][j];
+					u++;
+				}
+				v++;
+				u = 0;
+			}
+			v = 0;
+			u = 0
+		}
+
+		for (unsigned thread = 0; thread < thread_count; ++thread) {
+			pthread_join(thread_handles[thread], NULL);
+			result.M[thread][0] = submatrices[thread][2].M[0][0];
+			delete submatrices[thread];
+		}
+		delete submatrices;
+		delete thread_handles;
+
 	}
 }
 
@@ -104,15 +195,17 @@ matrix::matrix(const matrix& mtrx, const unsigned ind, const MatrixParam mp) {
 }
 
 matrix::matrix(const matrix& mtrx, const unsigned row_ind, const unsigned col_ind, 
-				const unsigned amount_row, const unsigned amount_col) {
-	n = amount_row;
-	m = amount_col;
+				const unsigned amount_elements_by_row, const unsigned amount_elements_by_col) {
+	n = amount_elements_by_row;
+	m = amount_elements_by_col;
 	M = (double**)malloc(n * sizeof(double*));
 
-	for (unsigned i = 0; i < n; ++i) {
-		for (unsigned j = 0; j < m; ++j) {
-			M[i] = (double*)malloc(m * sizeof(double));
-			// Тут надо дописывать
+	for (unsigned i = 0, v = row_ind * n + i; i < n; ++i) {
+		for (unsigned j = 0, u = col_ind * m + j; j < m; ++j) {
+			if (u < mtrx.m && v < mtrx.n) {
+				M[i] = (double*)malloc(m * sizeof(double));
+				M[i][j] = mtrx.M[v][u];
+			}
 		}
 	}
 	
