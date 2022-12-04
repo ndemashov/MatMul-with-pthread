@@ -97,9 +97,6 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 			}
 		}
 
-
-
-		
 		// Не получается сложить блочные матрицы в результирующий массив
 		for (unsigned thread = 0; thread < thread_count; ++thread) {
 			pthread_join(thread_handles[thread], NULL);
@@ -112,15 +109,23 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 			for (unsigned j = 0; j < std::max(col_block_m1, col_block_m2); ++j, ++thread) {
 				for (unsigned k = 0; k < submatrices[thread][2].n; ++k) {
 					for (unsigned t = 0; t < submatrices[thread][2].m; ++t) {
-						result.M[k][t] += submatrices[thread][2].M[k][t];
+						result.M[v][u] += submatrices[thread][2].M[k][t];
+						++u;
+					}
+					u = 0;
+					if (v < m1.n){
+						v++;
 					}
 				}
+				if (v < m1.n){
+					v = 0;
+				}
 			}
+			v = submatrices[thread - 1][2].n;
+			u = 0;
 		}
 
 		for (unsigned thread = 0; thread < thread_count; ++thread) {
-			pthread_join(thread_handles[thread], NULL);
-			result.M[thread][0] = submatrices[thread][2].M[0][0];
 			delete submatrices[thread];
 		}
 		delete submatrices;

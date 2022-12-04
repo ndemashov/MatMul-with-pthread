@@ -30,12 +30,12 @@ int main() {
 	MatMul::calc(CalcType::ByRows, m1, m2, result);
 	std::cout << "Result" << std::endl;
 	result.print();
-	if(test(CalcType::ByRows) == 1){
-		std::cout << "ERROR" << std::endl;
-	}else{
-		std::cout <<"Correct" << std::endl;
-	}
-	Metric M("output.txt", 100);
-	M.eval();
+	//if(test(CalcType::ByRows) == 1){
+	//	std::cout << "ERROR" << std::endl;
+	//}else{
+	//	std::cout <<"Correct" << std::endl;
+	//}
+	//Metric M("output.txt", 100);
+	//M.eval();
 	return 0;
 }
