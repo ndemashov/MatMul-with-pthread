@@ -5,4 +5,4 @@
 3. Parallel matrix multiplication by block decomposition
 
 
-![plot](metric_mul_by_row.png)
+![Alt text](https://github.com/ndemashov/MatMul-with-pthread/blob/master/metric_mul_by_row.jpg?raw=true "Title")
