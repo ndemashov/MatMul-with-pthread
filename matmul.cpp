@@ -97,57 +97,25 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 			}
 		}
 
+
+
+		
+		// Не получается сложить блочные матрицы в результирующий массив
 		for (unsigned thread = 0; thread < thread_count; ++thread) {
 			pthread_join(thread_handles[thread], NULL);
 		}
 		thread = 0;
 		unsigned v = 0;
 		unsigned u = 0;
+
 		for (unsigned i = 0; i < std::max(row_block_m1, row_block_m2); ++i) {
 			for (unsigned j = 0; j < std::max(col_block_m1, col_block_m2); ++j, ++thread) {
 				for (unsigned k = 0; k < submatrices[thread][2].n; ++k) {
 					for (unsigned t = 0; t < submatrices[thread][2].m; ++t) {
-						result.M[v][u] += submatrices[thread][2].M[v][u];
+						result.M[k][t] += submatrices[thread][2].M[k][t];
 					}
 				}
 			}
-		}
-
-
-
-		for (unsigned thread = 0; thread < thread_count; ++thread) {
-			pthread_join(thread_handles[thread], NULL);
-		}
-		unsigned v = 0;
-		unsigned u = 0;
-		thread = 0;
-		for (unsigned i = 0; i < std::max(row_block_m1, row_block_m2) ; ++i) {
-			for (unsigned j = 0; j < std::max(col_block_m1, col_block_m2); ++j) {
-				for (unsigned thread = 0; thread < thread_count/2; ++thread) {
-					result.M[v][u] += submatrices[thread][2].M[i][j];
-				}
-			}
-		}
-
-		for (unsigned i = 0; i < m1.n; ++i) {
-			for (unsigned j = 0; j < m2.m; ++j) {
-				result.M[i][j] = 0;
-			}
-		}
-
-		unsigned v = 0;
-		unsigned u = 0;
-		for (unsigned thread = 0; thread < thread_count; ++thread) {
-			for (unsigned i = 0; i < submatrices[thread][2].n; ++i) {
-				for (unsigned j = 0; j < submatrices[thread][2].m; ++j) {
-					result.M[v][u] += submatrices[thread][2].M[i][j];
-					u++;
-				}
-				v++;
-				u = 0;
-			}
-			v = 0;
-			u = 0
 		}
 
 		for (unsigned thread = 0; thread < thread_count; ++thread) {
