@@ -191,9 +191,61 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 			row_block_m2_ = row_block_m2;
 			amount_elements_by_row_m2_ = max_amount_elements_by_row_m2;
 		}
+		
+		unsigned max_amount_elements_by_row_m3 = max_amount_elements_by_row_m1;
+		unsigned max_amount_elements_by_col_m3 = max_amount_elements_by_col_m2;
+		unsigned amount_elements_by_row_m3_ = max_amount_elements_by_row_m3;
+		unsigned amount_elements_by_col_m3_ = max_amount_elements_by_col_m3;
+		unsigned row_block_m3 = row_block_m1;
+		unsigned col_block_m3 = col_block_m2;
+		unsigned row_block_m3_ = row_block_m3;
+		unsigned col_block_m3_ = col_block_m3;
+		unsigned m_m3 = result.m;
+		unsigned n_m3 = result.n;
+		thread = 0;
+		std::cout << "Create submatrices[2]\n";
+		while (thread != thread_count) {
+			for (unsigned row_ind = 0; row_ind < row_block_m3; ++row_ind) {
+				for (unsigned col_ind = 0; col_ind < col_block_m3; ++col_ind) {
+					std::cout << "row_ind = " << row_ind << std::endl;
+					std::cout << "col_ind = " << col_ind << std::endl;
+					submatrices[thread][2] = matrix(result, row_ind, col_ind, amount_elements_by_row_m3_, amount_elements_by_col_m3_,
+													result.n - n_m3, result.m - m_m3);
 
-		
-		
+					std::cout << "Submatrices[2]" << std::endl;
+					submatrices[thread][2].print();
+
+					m_m3 = m_m3 - amount_elements_by_col_m3_;
+					col_block_m3_ = col_block_m3_ - 1;
+					if (col_block_m3_ != 0) {
+						amount_elements_by_col_m3_ = ceil(m_m3 / double(col_block_m3_));
+					} else {
+						std::cout << "col_block_m3_ = 0" << std::endl;
+					}
+					std::cout << "m_m3=" << m_m3 << std::endl;
+					std::cout << "col_block_m3_=" << col_block_m3_ << std::endl;
+					std::cout << "amount_elements_by_col_m3_=" << amount_elements_by_col_m3_ << std::endl;
+					thread++;
+				}
+				// Фикс столбцов
+				m_m3 = result.m;
+				col_block_m3_ = col_block_m3;
+				amount_elements_by_col_m3_ = max_amount_elements_by_col_m3;
+
+				//Фикс строк
+				n_m3 = n_m3 - amount_elements_by_row_m3_;
+				row_block_m3_ = row_block_m3_ - 1;
+				if (row_block_m3_ != 0) {
+					amount_elements_by_row_m3_ = ceil(n_m3 / double(row_block_m3_));
+				} else {
+					std::cout << "row_block_m3_ = 0" << std::endl;
+				}
+			}
+			// Фикс строк
+			n_m3 = result.n;
+			row_block_m3_ = row_block_m3;
+			amount_elements_by_row_m3_ = max_amount_elements_by_row_m3;
+		}
 
 
 		// for (unsigned row_ind_m1 = 0, row_ind_m2 = 0, i = 0; i < std::max(row_block_m1, row_block_m2) ; ++i) {
