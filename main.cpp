@@ -1,6 +1,10 @@
 #include "matmul.h"
 #include <string>
 
+
+#include "matmul.h"
+#include <string>
+
 int test(const CalcType ct){
     matrix m1(5, 2), m2(2, 3);
     double reference[5][3] = {
@@ -34,7 +38,20 @@ int main() {
 	std::cout << "Result" << std::endl;
 	result.print();
 	
+	
 	if(test(CalcType::ByRows) == 1){
+		std::cout << "ERROR" << std::endl;
+	}else{
+		std::cout <<"Correct" << std::endl;
+	}
+
+	matrix result2(3, 3);
+	MatMul::calc(CalcType::ByColumns, m1, m2, result2);
+	std::cout << "Result2" << std::endl;
+	result2.print();
+
+
+	if(test(CalcType::ByColumns) == 1){
 		std::cout << "ERROR" << std::endl;
 	}else{
 		std::cout <<"Correct" << std::endl;

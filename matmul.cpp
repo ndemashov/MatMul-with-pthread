@@ -13,6 +13,20 @@ void* MatMul::mul_by_rows(void* _matrices) {
 	return NULL;
 }
 
+void* MatMul::mul_by_columns(void* _matrices) {
+	matrix* matrices = (matrix*)_matrices;
+    std::cout << "new turn with ";
+    matrices[0].print();
+    matrices[1].print();
+    std::cout << "........." << std::endl;
+	for(unsigned i = 0; i < matrices[0].n; ++i) {
+        for (unsigned j = 0; j < matrices[1].m; ++j) {
+            matrices[2].M[i][j] = matrices[0].M[i][0] * matrices[1].M[0][j];  //*=
+        }
+	}
+	return NULL;
+}
+
 void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix& result) {
 	assert(m1.m == m2.n);
 	assert(m1.n == result.n && m2.m == result.m);
@@ -40,7 +54,33 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 		}
 		delete submatrices;
 		delete thread_handles;
-	}
+	} else if(ct == CalcType::ByColumns){
+        for(unsigned i = 0; i < result.n; ++i) {
+            for (unsigned j = 0; j < result.m; ++j) {
+                result.M[i][j] = 0;
+            }
+	    }
+        unsigned thread_count = m1.m;   //по количеству столбцов
+		pthread_t* thread_handles = (pthread_t*)malloc(thread_count * sizeof(pthread_t));
+        matrix** submatrices = (matrix**)malloc(thread_count * sizeof(matrix*));
+		for (unsigned thread = 0; thread < thread_count; ++thread) {
+            submatrices[thread] = (matrix*)malloc(3 * sizeof(matrix));
+			submatrices[thread][0] = matrix(m1, 0, thread,  MatrixParam::column);
+			submatrices[thread][1] = matrix(m2, thread, 0, MatrixParam::row);
+			submatrices[thread][2] = matrix(result.n, result.m);
+			pthread_create(&thread_handles[thread], NULL, MatMul::mul_by_columns, (void*)submatrices[thread]);
+		}
+		for (unsigned thread = 0; thread < thread_count; ++thread) {
+			pthread_join(thread_handles[thread], NULL);
+            for (unsigned row = 0; row < m1.n; ++row) {
+			    for(unsigned column = 0; column < m2.m; ++column){
+                    result.M[row][column] += submatrices[thread][2].M[row][column];
+                }
+            }
+			delete submatrices[thread];
+		}
+
+    } 
 }
 
 matrix::matrix(const unsigned _n, const unsigned _m) : n(_n), m(_m) {
