@@ -15,10 +15,10 @@ void* MatMul::mul_by_rows(void* _matrices) {
 
 void* MatMul::mul_by_columns(void* _matrices) {
 	matrix* matrices = (matrix*)_matrices;
-    std::cout << "new turn with ";
-    matrices[0].print();
-    matrices[1].print();
-    std::cout << "........." << std::endl;
+    //std::cout << "new turn with ";
+    //matrices[0].print();
+    //matrices[1].print();
+    //std::cout << "........." << std::endl;
 	for(unsigned i = 0; i < matrices[0].n; ++i) {
         for (unsigned j = 0; j < matrices[1].m; ++j) {
             matrices[2].M[i][j] = matrices[0].M[i][0] * matrices[1].M[0][j];  //*=

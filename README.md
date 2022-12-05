@@ -6,4 +6,5 @@
 
 
 ## График зависимости времени умножения в милисекундах от размера матриц
-![Alt text](https://github.com/ndemashov/MatMul-with-pthread/blob/master/metric_mul_by_row.jpg?raw=true "Title")
+### by row - синий, by column - зеленый
+![Alt text](https://github.com/ndemashov/MatMul-with-pthread/blob/master/img.jpg?raw=true "Title")
