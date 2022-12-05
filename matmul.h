@@ -13,7 +13,8 @@ enum CalcType{
 
 enum MatrixParam{
 	row,
-	column
+	column,
+	cell
 };
 
 struct matrix {
@@ -25,6 +26,8 @@ struct matrix {
 	matrix(const matrix& mtrx, const unsigned row_ind, const unsigned col_ind, 
 			const unsigned amount_elements_by_row, const unsigned amount_elements_by_col,
 			const unsigned ost_row, const unsigned ost_col);
+
+	matrix(const matrix& mtrx, const unsigned row, const unsigned column, const MatrixParam mp);
 	~matrix();
 	//matrix(const matrix&) = delete;
 	matrix& operator=(const matrix& mtrx);
