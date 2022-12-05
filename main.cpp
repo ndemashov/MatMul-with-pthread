@@ -19,15 +19,15 @@ int main() {
 	//const auto processor_count = std::thread::hardware_concurrency();
     //std::cout << processor_count << std::endl;
 
-	matrix m1(5, 2), m2(2, 1);
+	matrix m1(1, 1), m2(1, 5);
 	std::cout << "M1" << std::endl;
 	m1.print();
 	std::cout << "M2" << std::endl;
 	m2.print();
-	matrix result(5, 1);
-	std::cout << "result" << std::endl;
-	result.print();
-	MatMul::calc(CalcType::ByRows, m1, m2, result);
+	matrix result(1, 5);
+	//std::cout << "result" << std::endl;
+	//result.print();
+	MatMul::calc(CalcType::ByBlocks, m1, m2, result);
 	std::cout << "Result" << std::endl;
 	result.print();
 	//if(test(CalcType::ByRows) == 1){
