@@ -79,81 +79,174 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 		pthread_t* thread_handles = (pthread_t*)malloc(thread_count * sizeof(pthread_t));
 		matrix** submatrices = (matrix**)malloc(thread_count * sizeof(matrix*));
 		unsigned thread = 0;
-		unsigned amount_elements_by_row_m1 = ceil(m1.n / (double)row_block_m1);
-		std::cout << "amount_elements_by_row_m1 = " << amount_elements_by_row_m1 << std::endl;
-		unsigned amount_elements_by_col_m1 = ceil(m1.m / (double)col_block_m1);
-		std::cout << "amount_elements_by_col_m1 = " << amount_elements_by_col_m1 << std::endl;
-		unsigned amount_elements_by_row_m2 = ceil(m2.n / (double)row_block_m2);
-		std::cout << "amount_elements_by_row_m2 = " << amount_elements_by_row_m2 << std::endl;
-		unsigned amount_elements_by_col_m2 = ceil(m2.m / (double)col_block_m2);
-		std::cout << "amount_elements_by_col_m2 = " << amount_elements_by_col_m2 << std::endl;
+		unsigned max_amount_elements_by_row_m1 = ceil(m1.n / (double)row_block_m1);
+		std::cout << "max_amount_elements_by_row_m1 = " << max_amount_elements_by_row_m1 << std::endl;
+		unsigned max_amount_elements_by_col_m1 = ceil(m1.m / (double)col_block_m1);
+		std::cout << "max_amount_elements_by_col_m1 = " << max_amount_elements_by_col_m1 << std::endl;
+		unsigned max_amount_elements_by_row_m2 = ceil(m2.n / (double)row_block_m2);
+		std::cout << "max_amount_elements_by_row_m2 = " << max_amount_elements_by_row_m2 << std::endl;
+		unsigned max_amount_elements_by_col_m2 = ceil(m2.m / (double)col_block_m2);
+		std::cout << "max_amount_elements_by_col_m2 = " << max_amount_elements_by_col_m2 << std::endl;
 
-		unsigned col_blockm1 = col_block_m1;
-		unsigned col_blockm2 = col_block_m2;
-		unsigned m2m = m2.m;
-		for (unsigned row_ind_m1 = 0, row_ind_m2 = 0, i = 0; i < std::max(row_block_m1, row_block_m2) ; ++i) {
-			for (unsigned col_ind_m1 = 0, col_ind_m2 = 0, j = 0; j < std::max(col_block_m1, col_block_m2); ++j) {
-				std::cout << "Iteration\n";
-				std::cout << "row_ind_m1 = " << row_ind_m1 << std::endl;
-				std::cout << "row_ind_m2 = " << row_ind_m2 << std::endl;
-				std::cout << "col_ind_m1 = " << col_ind_m1 << std::endl;
-				std::cout << "col_ind_m2 = " << col_ind_m2 << std::endl;
-				std::cout << "\n";
-				if (col_ind_m1 == col_block_m1) {
-					col_ind_m1 = 0;
-				}
-				if (col_ind_m2 == col_block_m2) {
-					col_ind_m2 = 0;
-				}
-				submatrices[thread] = (matrix*)malloc(3 * sizeof(matrix));
-				submatrices[thread][0] = matrix(m1, row_ind_m1, col_ind_m1, amount_elements_by_row_m1, amount_elements_by_col_m1);
-				submatrices[thread][1] = matrix(m2, row_ind_m2, col_ind_m2, amount_elements_by_row_m2, amount_elements_by_col_m2);
-				col_blockm2 = col_blockm2 - 1;
-				m2m = m2m - amount_elements_by_col_m2;
-				amount_elements_by_col_m2 = ceil(m2m / (double)col_blockm2);
-				//std::cout << "ТУТ" <<std::endl;
-				submatrices[thread][2] = matrix(result, row_ind_m1, col_ind_m2, amount_elements_by_row_m1, amount_elements_by_col_m2);
-				std::cout << "Submatrices[0]" << std::endl;
-				submatrices[thread][0].print();
-				std::cout << "Submatrices[1]" << std::endl;
-				submatrices[thread][1].print();
-				//pthread_create(&thread_handles[thread], NULL, MatMul::mul_by_blocks, (void*)submatrices[thread]);
-				thread++;
-				col_ind_m1++;
-				col_ind_m2++;
-				//std::cout << "ТУТ" <<std::endl;
-			}
-			row_ind_m1++;
-			row_ind_m2++;
-			if (row_ind_m1 >= row_block_m1) {
-				row_ind_m1 = 0;
-			} 
-			if (row_ind_m2 >= row_block_m2) {
-				row_ind_m2 = 0;
-			}
+		for (unsigned thread = 0; thread < thread_count; ++thread) {
+			submatrices[thread] = (matrix*)malloc(3 * sizeof(matrix));
 		}
+
+		unsigned amount_elements_by_row_m1_ = max_amount_elements_by_row_m1;
+		unsigned amount_elements_by_col_m1_ = max_amount_elements_by_col_m1;
+		unsigned row_block_m1_ = row_block_m1;
+		unsigned col_block_m1_ = col_block_m1;
+		unsigned m_m1 = m1.m;
+		unsigned n_m1 = m1.n;
+		thread = 0;
+
+		std::cout << "Create submatrices[0]\n";
+		while (thread != thread_count) {
+			for (unsigned row_ind = 0; row_ind < row_block_m1; ++row_ind) {
+				for (unsigned col_ind = 0; col_ind < col_block_m1; ++col_ind) {
+					std::cout << "row_ind = " << row_ind << std::endl;
+					std::cout << "col_ind = " << col_ind << std::endl;
+					submatrices[thread][0] = matrix(m1, row_ind, col_ind, amount_elements_by_row_m1_, amount_elements_by_col_m1_,
+													m1.n-n_m1, m1.m - m_m1);
+
+					std::cout << "Submatrices[0]" << std::endl;
+					submatrices[thread][0].print();
+					
+					m_m1 = m_m1 - amount_elements_by_col_m1_;
+					col_block_m1_ = col_block_m1_ - 1;
+					if (col_block_m1_ != 0) {
+						amount_elements_by_col_m1_ = ceil(m_m1 / double(col_block_m1_));
+					} else {
+						std::cout << "col_block_m1_ = 0" << std::endl;
+					}
+
+					thread++;
+				}
+				// Фикс столбцов
+				m_m1 = m1.m;
+				col_block_m1_ = col_block_m1;
+				amount_elements_by_col_m1_ = max_amount_elements_by_col_m1;
+				//Фикс строк
+				n_m1 = n_m1 - amount_elements_by_row_m1_;
+				row_block_m1_ = row_block_m1_ - 1;
+				if (row_block_m1 != 0) {
+					amount_elements_by_row_m1_ = ceil(n_m1 / double(row_block_m1_));
+				} else {
+					std::cout << "row_block_m1 = 0" << std::endl;
+				}
+			}
+			// Фикс строк
+			n_m1 = m1.n;
+			row_block_m1_ = row_block_m1;
+			amount_elements_by_row_m1_ = max_amount_elements_by_row_m1;
+		}
+
+		unsigned amount_elements_by_row_m2_ = max_amount_elements_by_row_m2;
+		unsigned amount_elements_by_col_m2_ = max_amount_elements_by_col_m2;
+		unsigned row_block_m2_ = row_block_m2;
+		unsigned col_block_m2_ = col_block_m2;
+		unsigned m_m2 = m2.m;
+		unsigned n_m2 = m2.n;
+		thread = 0;
+		std::cout << "Create submatrices[1]\n";
+		while (thread != thread_count) {
+			for (unsigned row_ind = 0; row_ind < row_block_m2; ++row_ind) {
+				for (unsigned col_ind = 0; col_ind < col_block_m2; ++col_ind) {
+					std::cout << "row_ind = " << row_ind << std::endl;
+					std::cout << "col_ind = " << col_ind << std::endl;
+					submatrices[thread][1] = matrix(m2, row_ind, col_ind, amount_elements_by_row_m2_, amount_elements_by_col_m2_,
+													m2.n - n_m2, m2.m - m_m2);
+
+					std::cout << "Submatrices[1]" << std::endl;
+					submatrices[thread][1].print();
+
+					m_m2 = m_m2 - amount_elements_by_col_m2_;
+					col_block_m2_ = col_block_m2_ - 1;
+					if (col_block_m2_ != 0) {
+						amount_elements_by_col_m2_ = ceil(m_m2 / double(col_block_m2_));
+					} else {
+						std::cout << "col_block_m2_ = 0" << std::endl;
+					}
+					std::cout << "m_m2=" << m_m2 << std::endl;
+					std::cout << "col_block_m2_=" << col_block_m2_ << std::endl;
+					std::cout << "amount_elements_by_col_m2_=" << amount_elements_by_col_m2_ << std::endl;
+					thread++;
+				}
+				// Фикс столбцов
+				m_m2 = m2.m;
+				col_block_m2_ = col_block_m2;
+				amount_elements_by_col_m2_ = max_amount_elements_by_col_m2;
+
+				//Фикс строк
+				n_m2 = n_m2 - amount_elements_by_row_m2_;
+				row_block_m2_ = row_block_m2_ - 1;
+				if (row_block_m2_ != 0) {
+					amount_elements_by_row_m2_ = ceil(n_m2 / double(row_block_m2_));
+				} else {
+					std::cout << "row_block_m2_ = 0" << std::endl;
+				}
+			}
+			// Фикс строк
+			n_m2 = m2.n;
+			row_block_m2_ = row_block_m2;
+			amount_elements_by_row_m2_ = max_amount_elements_by_row_m2;
+		}
+
+		
+		
+
+
+		// for (unsigned row_ind_m1 = 0, row_ind_m2 = 0, i = 0; i < std::max(row_block_m1, row_block_m2) ; ++i) {
+		// 	for (unsigned col_ind_m1 = 0, col_ind_m2 = 0, j = 0; j < std::max(col_block_m1, col_block_m2); ++j) {
+		// 		submatrices[thread] = (matrix*)malloc(3 * sizeof(matrix));
+		// 		submatrices[thread][0] = matrix(m1, row_ind_m1, col_ind_m1, amount_elements_by_row_m1, amount_elements_by_col_m1);
+		// 		submatrices[thread][1] = matrix(m2, row_ind_m2, col_ind_m2, amount_elements_by_row_m2, amount_elements_by_col_m2);
+		// 		col_blockm2 = col_blockm2 - 1;
+		// 		m2m = m2m - amount_elements_by_col_m2;
+		// 		amount_elements_by_col_m2 = ceil(m2m / (double)col_blockm2);
+		// 		//std::cout << "ТУТ" <<std::endl;
+		// 		submatrices[thread][2] = matrix(result, row_ind_m1, col_ind_m2, amount_elements_by_row_m1, amount_elements_by_col_m2);
+		// 		std::cout << "Submatrices[0]" << std::endl;
+		// 		submatrices[thread][0].print();
+		// 		std::cout << "Submatrices[1]" << std::endl;
+		// 		submatrices[thread][1].print();
+		// 		//pthread_create(&thread_handles[thread], NULL, MatMul::mul_by_blocks, (void*)submatrices[thread]);
+		// 		thread++;
+		// 		col_ind_m1++;
+		// 		col_ind_m2++;
+		// 		//std::cout << "ТУТ" <<std::endl;
+		// 	}
+		// 	row_ind_m1++;
+		// 	row_ind_m2++;
+		// 	if (row_ind_m1 >= row_block_m1) {
+		// 		row_ind_m1 = 0;
+		// 	} 
+		// 	if (row_ind_m2 >= row_block_m2) {
+		// 		row_ind_m2 = 0;
+		// 	}
+		// }
 
 		// Не получается сложить блочные матрицы в результирующий массив
-		for (unsigned thread = 0; thread < thread_count; ++thread) {
-			pthread_join(thread_handles[thread], NULL);
-		}
+		// for (unsigned thread = 0; thread < thread_count; ++thread) {
+		// 	pthread_join(thread_handles[thread], NULL);
+		// }
 
-		thread = 0;
-		for (unsigned i = 0; i < result.n; ++i) {
-			for (unsigned j = 0; j < result.m; ++j, ++thread) {
-				for (unsigned k = 0; k < submatrices[thread][2].n; ++k) {
-					for (unsigned t = 0; t < submatrices[thread][2].m; ++t) {
-						result.M[i][j] = submatrices[thread][2].M[k][t];
-					}
-				}
-			}
-		}
+		// thread = 0;
+		// for (unsigned i = 0; i < result.n; ++i) {
+		// 	for (unsigned j = 0; j < result.m; ++j, ++thread) {
+		// 		for (unsigned k = 0; k < submatrices[thread][2].n; ++k) {
+		// 			for (unsigned t = 0; t < submatrices[thread][2].m; ++t) {
+		// 				result.M[i][j] = submatrices[thread][2].M[k][t];
+		// 			}
+		// 		}
+		// 	}
+		// }
 
-		for (unsigned thread = 0; thread < thread_count; ++thread) {
-			delete submatrices[thread];
-		}
-		delete submatrices;
-		delete thread_handles;
+		// for (unsigned thread = 0; thread < thread_count; ++thread) {
+		// 	delete submatrices[thread];
+		// }
+		// delete submatrices;
+		// delete thread_handles;
 
 
 
@@ -221,26 +314,27 @@ matrix::matrix(const matrix& mtrx, const unsigned ind, const MatrixParam mp) {
 }
 
 matrix::matrix(const matrix& mtrx, const unsigned row_ind, const unsigned col_ind, 
-				const unsigned amount_elements_by_row, const unsigned amount_elements_by_col) {
+				const unsigned amount_elements_by_row, const unsigned amount_elements_by_col,
+				const unsigned ost_row, const unsigned ost_col) { // ost = m1.n - n_m1
 	n = unsigned(amount_elements_by_row);
 	m = unsigned(amount_elements_by_col);
 	M = (double**)malloc(n * sizeof(double*));
-	unsigned v;
-	unsigned u;
 
 	for (unsigned i = 0; i < n; ++i) {
-		//std::cout << "v = " << v << std::endl;
 		for (unsigned j = 0; j < m; ++j) {
-			//std::cout << "u = " << u << std::endl;
 			M[i] = (double*)malloc(m * sizeof(double));
 		}
 	}
 
+	unsigned v;
+	unsigned u;
 	for (unsigned i = 0; i < n; ++i) {
-		v = row_ind * (n + 1) + i;
+		v = ost_row + i;
+		std::cout << "v = " << v << std::endl;
 		for (unsigned j = 0; j < m; ++j) {
-			u = col_ind * (m + 1) + j;
-			M[i][j] = mtrx.M[v][u];
+			u = ost_col + j;
+			std::cout << "u = " << u << std::endl;
+			M[i][j] = mtrx.M[v][u];	
 		}
 	}
 	

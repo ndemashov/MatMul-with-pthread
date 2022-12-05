@@ -23,7 +23,8 @@ struct matrix {
 	matrix(double** _M, unsigned _n, unsigned _m);
 	matrix(const matrix& mtrx, const unsigned ind, const MatrixParam mp);
 	matrix(const matrix& mtrx, const unsigned row_ind, const unsigned col_ind, 
-			const unsigned amount_elements_by_row, const unsigned amount_elements_by_col);
+			const unsigned amount_elements_by_row, const unsigned amount_elements_by_col,
+			const unsigned ost_row, const unsigned ost_col);
 	~matrix();
 	//matrix(const matrix&) = delete;
 	matrix& operator=(const matrix& mtrx);
