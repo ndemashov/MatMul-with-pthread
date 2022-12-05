@@ -27,13 +27,13 @@ int test(const CalcType ct){
 }
 
 int main() {
-	// matrix m1(5, 5), m2(5, 5);
+	// matrix m1(500, 500), m2(500, 500);
 
 	// std::cout << "M1" << std::endl;
 	// m1.print();
 	// std::cout << "M2" << std::endl;
 	// m2.print();
-	// matrix result(5, 5);
+	// matrix result(500, 500);
 	// std::cout << "result" << std::endl;
 	// result.print();
 	// MatMul::calc(CalcType::ByBlocks, m1, m2, result);

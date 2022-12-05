@@ -483,7 +483,7 @@ void Metric::eval(){
 		unsigned n = 5 * (iter + 1);
 		matrix m1(n, n), m2(n, 1), result(n, 1);
 		std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-		MatMul::calc(CalcType::ByBlocks, m1, m2, result);
+		MatMul::calc(CalcType::ByColumns, m1, m2, result);
 		std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
 		file << n << ", " << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() << std::endl;
 	}
