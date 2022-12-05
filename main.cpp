@@ -27,52 +27,26 @@ int test(const CalcType ct){
 }
 
 int main() {
-	matrix m1(6, 6), m2(6, 1);
+	// matrix m1(5, 5), m2(5, 5);
 
-	std::cout << "M1" << std::endl;
-	m1.print();
-	std::cout << "M2" << std::endl;
-	m2.print();
-	matrix result(6, 1);
-	std::cout << "result" << std::endl;
-	result.print();
-	MatMul::calc(CalcType::ByBlocks, m1, m2, result);
-	std::cout << "Result" << std::endl;
-	result.print();
-	//if(test(CalcType::ByRows) == 1){
-	//	std::cout << "ERROR" << std::endl;
-	//}else{
-	//	std::cout <<"Correct" << std::endl;
-	//}
-	//Metric M("output.txt", 100);
-	//M.eval();
-
-	
-	// matrix result(3, 3);
-	// MatMul::calc(CalcType::ByRows, m1, m2, result);
+	// std::cout << "M1" << std::endl;
+	// m1.print();
+	// std::cout << "M2" << std::endl;
+	// m2.print();
+	// matrix result(5, 5);
+	// std::cout << "result" << std::endl;
+	// result.print();
+	// MatMul::calc(CalcType::ByBlocks, m1, m2, result);
 	// std::cout << "Result" << std::endl;
 	// result.print();
-	
-	
-	// if(test(CalcType::ByRows) == 1){
-	// 	std::cout << "ERROR" << std::endl;
-	// }else{
-	// 	std::cout <<"Correct" << std::endl;
-	// }
 
-	// matrix result2(3, 3);
-	// MatMul::calc(CalcType::ByColumns, m1, m2, result2);
-	// std::cout << "Result2" << std::endl;
-	// result2.print();
-
-
-	// if(test(CalcType::ByColumns) == 1){
-	// 	std::cout << "ERROR" << std::endl;
-	// }else{
-	// 	std::cout <<"Correct" << std::endl;
-	// }
+	if(test(CalcType::ByBlocks) == 1){
+		std::cout << "ERROR" << std::endl;
+	}else{
+		std::cout <<"Correct" << std::endl;
+	}
+	Metric M("output.txt", 100);
+	M.eval();
 	
-	// Metric M("output.txt", 100);
-	// M.eval();
 	return 0;
 }
