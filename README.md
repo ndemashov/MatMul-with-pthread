@@ -6,5 +6,5 @@
 
 
 ## График зависимости времени умножения в милисекундах от размера матриц
-### by row - синий, by column - зеленый
+### by row - фиолетовый, by column - зеленый, by block - синий
 ![Alt text](https://github.com/ndemashov/MatMul-with-pthread/blob/master/img.jpg?raw=true "Title")
