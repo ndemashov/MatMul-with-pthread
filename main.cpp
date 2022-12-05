@@ -19,12 +19,12 @@ int main() {
 	//const auto processor_count = std::thread::hardware_concurrency();
     //std::cout << processor_count << std::endl;
 
-	matrix m1(3, 3), m2(3, 1);
+	matrix m1(6, 6), m2(6, 1);
 	std::cout << "M1" << std::endl;
 	m1.print();
 	std::cout << "M2" << std::endl;
 	m2.print();
-	matrix result(3, 1);
+	matrix result(6, 1);
 	std::cout << "result" << std::endl;
 	result.print();
 	MatMul::calc(CalcType::ByBlocks, m1, m2, result);

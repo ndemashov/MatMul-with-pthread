@@ -50,7 +50,8 @@ public:
 
 class Decomposition {
 public:
-	static unsigned amount_threads(const matrix& mtrx, unsigned& row_block, unsigned& col_block);  
+	static unsigned amount_threads(const matrix& mtrx1, const matrix& mtrx2, unsigned& row_block1, unsigned& col_block1,
+									unsigned& row_block2, unsigned& col_block2);  
 };
 
 class Metric{

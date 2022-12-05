@@ -27,7 +27,7 @@ void* MatMul::mul_by_blocks(void* _matrices) {
 	for (unsigned i = 0; i < matrices[2].n; ++i) {
 		for (unsigned k = 0; k < matrices[0].m; ++k) {
 			for (unsigned j = 0; j < matrices[2].m; ++j) {
-				//matrices[2].M[i][j] += matrices[0].M[i][k] * matrices[1].M[k][j];
+				matrices[2].M[i][j] += matrices[0].M[i][k] * matrices[1].M[k][j];
 			}
 		}
 	}
@@ -73,8 +73,8 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 		unsigned col_block_m2 = 1;
 
 		// Сюда лучше передавать матрицу с наибольшей размерностью, но пока это m1
-		unsigned thread_count_m1 = Decomposition::amount_threads(m1, row_block_m1, col_block_m1);
-		unsigned thread_count_m2 = Decomposition::amount_threads(m2, row_block_m2, col_block_m2);
+		unsigned thread_count = Decomposition::amount_threads(m1, m2, row_block_m1, col_block_m1, row_block_m2, col_block_m2);
+		//unsigned thread_count_m2 = Decomposition::amount_threads(m2, row_block_m2, col_block_m2);
 
 		std::cout<<"m1 row_block = " << row_block_m1 << std::endl;
 		std::cout<<"m1 col_block = " << col_block_m1 << std::endl;
@@ -82,7 +82,7 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 		std::cout<<"m2 row_block = " << row_block_m2 << std::endl;
 		std::cout<<"m2 col_block = " << col_block_m2 << std::endl;
 
-		unsigned thread_count = std::max(thread_count_m1, thread_count_m2);
+		//unsigned thread_count = std::max(thread_count_m1, thread_count_m2);
 		std::cout << "thread_count = " << thread_count << std::endl;
 		// row_block * row_ind = thread_count
 		pthread_t* thread_handles = (pthread_t*)malloc(thread_count * sizeof(pthread_t));
@@ -286,11 +286,14 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 			thread++;
 		}
 
-		for (unsigned row_ind = 0; row_ind < row_block_m3; ++row_ind) {
-			for (unsigned col_ind = 0; col_ind < col_block_m3; ++col_ind) {
+		for (unsigned row_ind = 0; row_ind < result.n; ++row_ind) {
+			for (unsigned col_ind = 0; col_ind < result.m; ++col_ind) {
+
 				result.M[row_ind][col_ind] = 0;
 			}
 		}
+		std::cout << "Print after 0" << std::endl;
+ 		result.print();
 
 		unsigned v = 0;
 		unsigned u = 0;
@@ -298,21 +301,21 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 		unsigned sum = 0;
 		for (unsigned row_ind = 0; row_ind < row_block_m3; ++row_ind) {
 			for (unsigned col_ind = 0; col_ind < col_block_m3; ++col_ind) {
-				for (unsigned i = 0; i < submatrices[thread][2].n; ++i) {
-					for (unsigned j = 0; j < submatrices[thread][2].m; ++j) {
-						sum += submatrices[thread][2].M[i][j];
-						result.M[v][u] = submatrices[thread][2].M[i][j];
-						u = u == result.m ? 0 : u + 1;
+				for (unsigned i = 0, k = v; i < submatrices[thread][2].n; ++i, ++k) {
+					for (unsigned j = 0, t = u; j < submatrices[thread][2].m; ++j, ++t) {
+						// std::cout << "k = " << k << std::endl;
+						// std::cout << "t = " << t << std::endl;
+						// std::cout << result.M[k][t] << std::endl;
+						result.M[k][t] += submatrices[thread][2].M[i][j];
+						//std::cout << result.M[k][t] << std::endl;
 					}
 				}
 				thread++;
 			}
-			u = 0;
-			v++;
-			if (v != row_ind) {
-				result.M[v-1][u] = sum;
-				sum = 0;
-			}
+			v += submatrices[thread - 1][2].n;
+			u += submatrices[thread - 1][2].m;
+			v = v >= result.n ? 0 : v;
+			u = u >= result.m ? 0 : u;
 		}
 
 
@@ -501,30 +504,34 @@ matrix::~matrix(){
 	delete M;
 }
 
-unsigned Decomposition::amount_threads(const matrix& mtrx, unsigned& row_block, unsigned& col_block) {
+unsigned Decomposition::amount_threads(const matrix& mtrx1, const matrix& mtrx2, unsigned& row_block1, unsigned& col_block1,
+									unsigned& row_block2, unsigned& col_block2) {
 	// Основано на том, что общее количество процессов представимо в степени 2
 	// Определение количества процесcоров
 	const auto processor_count = std::thread::hardware_concurrency();
 	// Разобьем задачу на поиск блоков по строкам и столбцам. Изначально полагаем, что 
 	// количество блоков по строкам равно общему количеству процессов, а по столбцам - 1.
-	row_block = processor_count;
-	col_block = 1;
+	row_block1 = processor_count;
+	col_block1 = 1;
 	// Для разбиения на блоки по строкам необходимо, чтобы mtrx.n была больше, чем row_block
-	while (mtrx.n < row_block) {
-		row_block = row_block >> 1;
+	while (mtrx1.n < row_block1) {
+		row_block1 = row_block1 >> 1;
 	}
 	// "Остаток" процессоров записываем в col_block так, чтобы col_block * row_block = process_count
 	//std::cout << "rov_block >> 1 = " << (row_block >> 1) << std::endl;
 	//std::cout << "processor_count >> (row_block >> 1) = " << (processor_count >> (row_block >> 1)) << std::endl;
-	col_block = processor_count >> (row_block >> 1);
+	col_block1 = processor_count >> (row_block1 >> 1);
 	//std::cout << "col_block in decomposition = " << col_block << std::endl;
 	// Для разбиения на блоки по столбцам необходимо, чтобы mtrx.m была больше, чем col_block
 	//std::cout << "mtrx.m = " << mtrx.m << std::endl;
-	col_block = mtrx.m > col_block ? col_block : mtrx.m;
+	col_block1 = mtrx1.m > col_block1 ? col_block1 : mtrx1.m;
 	//std::cout << "col_block ending = " << col_block << std::endl;
 
+	row_block2 = col_block1;
+	col_block2 = processor_count >> (row_block2 >> 1);
+	col_block2 = mtrx2.m > col_block2 ? col_block2 : mtrx2.m;
 	// Произедение col_block * row_block <= processor_count
-	return col_block * row_block;
+	return col_block1 * row_block1;
 }
 
 Metric::Metric(const std::string metric_file, const unsigned _iter_num) : iter_num(_iter_num) {
