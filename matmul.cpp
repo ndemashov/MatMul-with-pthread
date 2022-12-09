@@ -33,6 +33,7 @@ void* MatMul::mul_by_blocks(void* _matrices) {
 	}
 }
 
+
 void* MatMul::mul_by_columns(void* _matrices) {
 	matrix* matrices = (matrix*)_matrices;
     //std::cout << "new turn with ";
@@ -335,6 +336,18 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 
     } 
 
+	if(ct == CalcType::Single){
+		for(int i = 0; i < m1.n; ++i){
+			for(int j = 0; j < m2.m; ++j){
+				double res = 0;
+				for(int z = 0; z < m1.m; ++z){
+					res += m1.M[i][z]*m2.M[z][j];
+				}
+				result.M[i][j] = res;
+			}
+		}
+	}
+
 }
 
 matrix::matrix(const unsigned _n, const unsigned _m) : n(_n), m(_m) {
@@ -483,7 +496,7 @@ void Metric::eval(){
 		unsigned n = 5 * (iter + 1);
 		matrix m1(n, n), m2(n, 1), result(n, 1);
 		std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-		MatMul::calc(CalcType::ByColumns, m1, m2, result);
+		MatMul::calc(CalcType::ByRows, m1, m2, result);
 		std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
 		file << n << ", " << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() << std::endl;
 	}
