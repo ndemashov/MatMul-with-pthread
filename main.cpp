@@ -1,6 +1,9 @@
 #include "matmul.h"
 #include <string>
 
+#include <thread>
+
+
 
 #include "matmul.h"
 #include <string>
@@ -40,12 +43,12 @@ int main() {
 	// std::cout << "Result" << std::endl;
 	// result.print();
 
-	if(test(CalcType::ByBlocks) == 1){
+	if(test(CalcType::Single) == 1){
 		std::cout << "ERROR" << std::endl;
 	}else{
 		std::cout <<"Correct" << std::endl;
 	}
-	Metric M("output.txt", 100);
+	Metric M("output.txt", 20);
 	M.eval();
 	
 	return 0;

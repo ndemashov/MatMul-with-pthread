@@ -52,7 +52,7 @@ void MatMul::calc(const CalcType ct, const matrix& m1, const matrix& m2, matrix&
 	assert(m1.m == m2.n);
 	assert(m1.n == result.n && m2.m == result.m);
 	if(ct == CalcType::ByRows) {
-		unsigned thread_count = m1.n * m2.m;
+		unsigned thread_count = m1.n * m2.n;
 		pthread_t* thread_handles = (pthread_t*)malloc(thread_count * sizeof(pthread_t));
 		matrix** submatrices = (matrix**)malloc(thread_count * sizeof(matrix*));
 		for (unsigned row = 0; row < m1.n; ++row) {
@@ -494,9 +494,9 @@ Metric::~Metric() {
 void Metric::eval(){
 	for(unsigned iter = 0; iter < iter_num; ++iter) {
 		unsigned n = 5 * (iter + 1);
-		matrix m1(n, n), m2(n, 1), result(n, 1);
+		matrix m1(n, n), m2(n, n), result(n, n);
 		std::chrono::steady_clock::time_point t1 = std::chrono::steady_clock::now();
-		MatMul::calc(CalcType::ByRows, m1, m2, result);
+		MatMul::calc(CalcType::ByColumns, m1, m2, result);
 		std::chrono::steady_clock::time_point t2 = std::chrono::steady_clock::now();
 		file << n << ", " << std::chrono::duration_cast<std::chrono::microseconds>(t2 - t1).count() << std::endl;
 	}

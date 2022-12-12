@@ -8,7 +8,8 @@
 enum CalcType{
 	ByColumns,
 	ByRows,
-	ByBlocks
+	ByBlocks,
+	Single
 };
 
 enum MatrixParam{

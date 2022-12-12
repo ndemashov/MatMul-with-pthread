@@ -6,9 +6,9 @@
 
 
 ## График зависимости времени умножения в милисекундах от размера матриц
-### красный - 1 поток, зеленый - 4 потока
+### By rows: красный - 1 поток, зеленый - 4 потока
 ![Alt text](https://github.com/ndemashov/MatMul-with-pthread/blob/master/rows.jpg?raw=true "Title")
-### черный - 1 поток, красный - 4 потока
+### By columns: черный - 1 поток, красный - 4 потока
 ![Alt text](https://github.com/ndemashov/MatMul-with-pthread/blob/master/columns.jpg?raw=true "Title")
-### красный - 1 поток, зеленый - 4 потока
+### By blocks: красный - 1 поток, зеленый - 4 потока
 ![Alt text](https://github.com/ndemashov/MatMul-with-pthread/blob/master/block.jpg?raw=true "Title")
